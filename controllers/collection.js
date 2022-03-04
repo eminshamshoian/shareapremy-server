@@ -1,5 +1,7 @@
 import AWS from "aws-sdk";
 import { nanoid } from "nanoid";
+import slugify from "slugify";
+import Collection from "../models/collection";
 
 const awsConfig = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -66,5 +68,27 @@ export const removeImage = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const create = async (req, res) => {
+  try {
+    const alreadyExist = await Collection.findOne({
+      slug: slugify(req.body.name.toLowerCase()),
+    });
+    if (alreadyExist) return res.status(400).send("Title is taken");
+
+    const collection = await new Collection({
+      slug: slugify(req.body.name),
+      creator: req.user._id,
+      ...req.body,
+    }).save();
+
+    res.json(collection);
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(400)
+      .send("Creating collection failed. Please try again!");
   }
 };
