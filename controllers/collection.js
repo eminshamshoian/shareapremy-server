@@ -92,3 +92,14 @@ export const create = async (req, res) => {
       .send("Creating collection failed. Please try again!");
   }
 };
+
+export const read = async (req, res) => {
+  try {
+    const collection = await Collection.findOne({ slug: req.params.slug })
+      .populate("creator", "_id name")
+      .exec();
+    res.json(collection);
+  } catch (err) {
+    console.log(err);
+  }
+};

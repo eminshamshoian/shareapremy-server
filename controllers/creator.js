@@ -1,4 +1,5 @@
 import User from "../models/user";
+import Collection from "../models/collection";
 import queryString from "query-string";
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
@@ -65,6 +66,17 @@ export const currentCreator = async (req, res) => {
     } else {
       res.json({ ok: true });
     }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const creatorCollections = async (req, res) => {
+  try {
+    const videos = await Collection.find({ creator: req.user._id })
+      .sort({ createdAt: -1 })
+      .exec();
+    res.json(videos);
   } catch (err) {
     console.log(err);
   }
