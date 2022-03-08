@@ -1,8 +1,8 @@
-import AWS from "aws-sdk";
-import { nanoid } from "nanoid";
-import slugify from "slugify";
-import Collection from "../models/collection";
-import { readFileSync } from "fs";
+import AWS from 'aws-sdk';
+import { nanoid } from 'nanoid';
+import slugify from 'slugify';
+import Collection from '../models/collection';
+import { readFileSync } from 'fs';
 
 const awsConfig = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -16,23 +16,23 @@ const S3 = new AWS.S3(awsConfig);
 export const uploadImage = async (req, res) => {
   try {
     const { image } = req.body;
-    if (!image) return res.status(400).send("No image");
+    if (!image) return res.status(400).send('No image');
 
     // prepare the image
     const base64Data = new Buffer.from(
-      image.replace(/^data:image\/\w+;base64,/, ""),
-      "base64"
+      image.replace(/^data:image\/\w+;base64,/, ''),
+      'base64'
     );
 
-    const type = image.split(";")[0].split("/")[1];
+    const type = image.split(';')[0].split('/')[1];
 
     // image params
     const params = {
-      Bucket: "shareapremy-s3",
+      Bucket: 'shareapremy-s3',
       Key: `${nanoid()}.${type}`,
       Body: base64Data,
-      ACL: "public-read",
-      ContentEncoding: "base64",
+      ACL: 'public-read',
+      ContentEncoding: 'base64',
       ContentType: `image/${type}`,
     };
 
@@ -77,7 +77,7 @@ export const create = async (req, res) => {
     const alreadyExist = await Collection.findOne({
       slug: slugify(req.body.name.toLowerCase()),
     });
-    if (alreadyExist) return res.status(400).send("Title is taken");
+    if (alreadyExist) return res.status(400).send('Title is taken');
 
     const collection = await new Collection({
       slug: slugify(req.body.name),
@@ -90,14 +90,14 @@ export const create = async (req, res) => {
     console.log(err);
     return res
       .status(400)
-      .send("Creating collection failed. Please try again!");
+      .send('Creating collection failed. Please try again!');
   }
 };
 
 export const read = async (req, res) => {
   try {
     const collection = await Collection.findOne({ slug: req.params.slug })
-      .populate("creator", "_id name")
+      .populate('creator', '_id name')
       .exec();
     res.json(collection);
   } catch (err) {
@@ -108,19 +108,19 @@ export const read = async (req, res) => {
 export const uploadVideo = async (req, res) => {
   try {
     if (req.user._id != req.params.creatorId) {
-      return res.status(400).send("Unauthorized");
+      return res.status(400).send('Unauthorized');
     }
 
     const { video } = req.files;
     // console.log(video);
-    if (!video) return res.status(400).send("No video");
+    if (!video) return res.status(400).send('No video');
 
     // video params
     const params = {
-      Bucket: "shareapremy-s3",
-      Key: `${nanoid()}.${video.type.split("/")[1]}`,
+      Bucket: 'shareapremy-s3',
+      Key: `${nanoid()}.${video.type.split('/')[1]}`,
       Body: readFileSync(video.path),
-      ACL: "public-read",
+      ACL: 'public-read',
       ContentType: video.type,
     };
 
@@ -141,7 +141,7 @@ export const uploadVideo = async (req, res) => {
 export const removeVideo = async (req, res) => {
   try {
     if (req.user._id != req.params.creatorId) {
-      return res.status(400).send("Unauthorized");
+      return res.status(400).send('Unauthorized');
     }
     const { Bucket, Key } = req.body;
     // video params
@@ -170,7 +170,7 @@ export const addVideo = async (req, res) => {
     const { title, content, video } = req.body;
 
     if (req.user._id != creatorId) {
-      return res.status(400).send("Unauthorized");
+      return res.status(400).send('Unauthorized');
     }
 
     const updated = await Collection.findOneAndUpdate(
@@ -180,11 +180,30 @@ export const addVideo = async (req, res) => {
       },
       { new: true }
     )
-      .populate("creator", "_id name")
+      .populate('creator', '_id name')
       .exec();
     res.json(updated);
   } catch (err) {
     console.log(err);
-    return res.status(400).send("Add video failed");
+    return res.status(400).send('Add video failed');
+  }
+};
+
+export const update = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const collection = await Collection.findOne({ slug }).exec();
+    if (req.user._id != collection.creator) {
+      return res.status(400).send('Unauthorized');
+    }
+
+    const updated = await Collection.findOneAndUpdate({ slug }, req.body, {
+      new: true,
+    }).exec();
+
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send(err.message);
   }
 };
