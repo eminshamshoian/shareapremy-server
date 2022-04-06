@@ -18,7 +18,12 @@ import {
   update,
   removeVideoFromCollection,
   updateCollectionVideo,
+  publishCollection,
+  unpublishCollection,
+  collections,
 } from "../controllers/collection";
+
+router.get("/collections", collections);
 
 // Image
 router.post("/collection/upload-image", uploadImage);
@@ -35,6 +40,19 @@ router.post(
   uploadVideo
 );
 router.post("/collection/video-remove/:creatorId", requireSignin, removeVideo);
+
+// publish unpublish
+router.put(
+  "/collection/publish/:collectionId",
+  requireSignin,
+  publishCollection
+);
+router.put(
+  "/collection/unpublish/:collectionId",
+  requireSignin,
+  unpublishCollection
+);
+
 router.post("/collection/video/:slug/:creatorId", requireSignin, addVideo);
 router.put(
   "/collection/video/:slug/:creatorId",

@@ -261,3 +261,56 @@ export const updateCollectionVideo = async (req, res) => {
     return res.status(400).send("Update video failed");
   }
 };
+
+export const publishCollection = async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+    const collection = await Collection.findById(collectionId)
+      .select("creator")
+      .exec();
+
+    if (collection.creator._id != req.user._id) {
+      return res.status(400).send("Unauthorized");
+    }
+
+    const updated = await Collection.findByIdAndUpdate(
+      collectionId,
+      { published: true },
+      { new: true }
+    ).exec();
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send("Publish collection failed");
+  }
+};
+
+export const unpublishCollection = async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+    const collection = await Collection.findById(collectionId)
+      .select("creator")
+      .exec();
+
+    if (collection.creator._id != req.user._id) {
+      return res.status(400).send("Unauthorized");
+    }
+
+    const updated = await Collection.findByIdAndUpdate(
+      collectionId,
+      { published: false },
+      { new: true }
+    ).exec();
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send("Unpublish collection failed");
+  }
+};
+
+export const collections = async (req, res) => {
+  const all = await Collection.find({ published: true })
+    .populate("creator", "_id name")
+    .exec();
+  res.json(all);
+};
