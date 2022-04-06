@@ -4,7 +4,7 @@ import formidable from "express-formidable";
 const router = express.Router();
 
 // middleware
-import { requireSignin, isCreator } from "../middlewares";
+import { requireSignin, isCreator, isEnrolled } from "../middlewares";
 
 // controllers
 import {
@@ -21,6 +21,11 @@ import {
   publishCollection,
   unpublishCollection,
   collections,
+  checkSub,
+  freeSub,
+  paidSub,
+  stripeSuccess,
+  userCollections,
 } from "../controllers/collection";
 
 router.get("/collections", collections);
@@ -64,5 +69,14 @@ router.put(
   requireSignin,
   removeVideoFromCollection
 );
+
+// sub
+router.get("/check-sub/:collectionId", requireSignin, checkSub);
+router.post("/free-sub/:collectionId", requireSignin, freeSub);
+router.post("/paid-sub/:collectionId", requireSignin, paidSub);
+router.get("/stripe-success/:collectionId", requireSignin, stripeSuccess);
+
+router.get("/user-collections", requireSignin, userCollections);
+router.get("/user/collection/:slug", requireSignin, isEnrolled, read);
 
 module.exports = router;
