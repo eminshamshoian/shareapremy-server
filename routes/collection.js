@@ -41,7 +41,7 @@ router.get("/collection/:slug", read);
 router.post(
   "/collection/video-upload/:creatorId",
   requireSignin,
-  formidable(),
+  formidable({ maxFileSize: 500 * 1024 * 1024 }),
   uploadVideo
 );
 router.post("/collection/video-remove/:creatorId", requireSignin, removeVideo);
